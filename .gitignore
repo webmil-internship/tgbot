@@ -1,0 +1,8 @@
+# Ignore all draftfiles and tempfiles.
+/draft/*
+/tmp/*
+
+# Ignore configfile with bot token
+/config.yaml
+
+/Gemfile.lock
