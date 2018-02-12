@@ -1,3 +1,5 @@
+ENV['TZ'] = 'Europe/Kiev'
+
 require 'telegram/bot'
 require 'yaml'
 require 'rufus-scheduler'
