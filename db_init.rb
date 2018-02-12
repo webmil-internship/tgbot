@@ -19,8 +19,17 @@ else
   words.insert(:uk_word => 'стіл', :en_word => 'table')
 end
 
-puts "Words count: #{words.count}"
-puts "Words found:"
-words.each do |w|
-  puts "ID = #{w[:id]}, Ukr = #{w[:uk_word]}, Eng = #{w[:en_word]}"
+if DB.table_exists?(:users)
+  puts "Table users already exists !"
+  users = DB[:users]
+  puts "Users count: #{users.count}"
+  puts "Users found:"
+  users.each do |u|
+    puts "ID = #{u[:id]}, Username = #{w[:user_name]}"
+  end
+else
+  DB.create_table :users do
+    primary_key :id
+    String :user_name
+  end
 end
