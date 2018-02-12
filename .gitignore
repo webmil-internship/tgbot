@@ -2,7 +2,10 @@
 /draft/*
 /tmp/*
 
-# Ignore configfile with bot token
+# Ignore config file with bot token
 /config.yaml
+
+# Ignore DB
+/*.db
 
 /Gemfile.lock

@@ -5,6 +5,11 @@ DB = Sequel.connect('sqlite://tgb.db')
 if DB.table_exists?(:words)
   puts "Table words already exists !"
   words = DB[:words]
+  puts "Words count: #{words.count}"
+  puts "Words found:"
+  words.each do |w|
+    puts "ID = #{w[:id]}, Ukr = #{w[:uk_word]}, Eng = #{w[:en_word]}"
+  end
 else
   DB.create_table :words do
     primary_key :id
@@ -25,11 +30,15 @@ if DB.table_exists?(:users)
   puts "Users count: #{users.count}"
   puts "Users found:"
   users.each do |u|
-    puts "ID = #{u[:id]}, Username = #{w[:user_name]}"
+    puts "ID = #{u[:id]}, Username = #{u[:user_name]}, Active = #{u[:is_active]}"
   end
 else
   DB.create_table :users do
-    primary_key :id
+    Integer :id
     String :user_name
+    Boolean :is_active
   end
+  users = DB[:users]
+  users.insert(:id => 123, :user_name => 'RomanKS', :is_active => true)
+  users.insert(:id => 124, :user_name => 'RomanMTS', :is_active => false)
 end
