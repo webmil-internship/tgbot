@@ -56,7 +56,7 @@ if DB.table_exists?(:tasks)
   puts "Tasks count: #{tasks.count}"
   puts "Tasks found:"
   tasks.each do |t|
-    puts "ID = #{t[:date]}, ID word = #{u[:id_word]}"
+    puts "ID = #{t[:date]}, ID word = #{t[:id_word]}"
   end
 else
   DB.create_table :tasks do
