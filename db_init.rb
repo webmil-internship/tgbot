@@ -75,7 +75,7 @@ if DB.table_exists?(:results)
   puts "Results count: #{results.count}"
   puts "Results found:"
   results.each do |r|
-    puts "ID = #{r[:date]}, ID word = #{r[:id_word]}"
+    puts "ID = #{r[:id_user]}, ID word = #{r[:date_task]}, tag = #{r[:tag]}, confidence = #{r[:confidence]}"
   end
 else
   DB.create_table :results do

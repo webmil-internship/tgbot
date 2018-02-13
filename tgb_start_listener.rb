@@ -16,6 +16,12 @@ Telegram::Bot::Client.run(CONFIG['token']) do |bot|
       # Відправка на зовнішній ресурс розпізнавання фото
       # Отримання результату та запис його в БД
       #
+# !!! якщо учасник відсутній в таблиці users, добавляємо
+      users = DB[:users]
+      user_id = message.from.id
+      user_uname = message.from.username
+      users.insert(:id => user_id, :user_name => user_uname) if DB[:users].where(id: 1).first.nil?
+#if false
       uri = URI(CONFIG['mscv_url'])
       uri.query = URI.encode_www_form({
           'visualFeatures' => 'Tags',
@@ -24,24 +30,24 @@ Telegram::Bot::Client.run(CONFIG['token']) do |bot|
       request = Net::HTTP::Post.new(uri.request_uri)
       request['Content-Type'] = 'application/json'
       request['Ocp-Apim-Subscription-Key'] = CONFIG['mscv_subkey']
-      #request.body = "{\"url\": \"http://www.pravmir.ru/wp-content/uploads/2013/05/paz.jpg\"}"
-      request.body = "{\"url\": \"http://vseproauto.com/wp-content/uploads/2017/10/zovnishnist-i-dvygun-zaz-lanos-tsina-ne-vidpovidaye-ochikuvannyam.jpg\"}"
+      request.body = "{\"url\": \"http://www.pravmir.ru/wp-content/uploads/2013/05/paz.jpg\"}"
+      #request.body = "{\"url\": \"http://vseproauto.com/wp-content/uploads/2017/10/zovnishnist-i-dvygun-zaz-lanos-tsina-ne-vidpovidaye-ochikuvannyam.jpg\"}"
       response = Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') do |http|
           http.request(request)
       end
       json = JSON.parse(response.body)
       tags = json["tags"]
-      tags.each do |tag|
-        puts " #{tag["name"]} -> #{tag["confidence"]}"
-      end
-# !!! Отримання ID учасника, який прислав фото
-#      user_name = message.from.first_name
-#      your_uname = message.from.username
-#      your_id = message.from.id
-# !!! якщо учасник відсутній в таблиці users, добавляємо
+#      puts 'response'
+      date_daily = DB[:tasks].max(:date)
 # !!! записуємо результати розпізнавання в таблицю results
+      results = DB[:results]
+      tags.each do |tag|
+#        puts " #{tag["name"]} -> #{tag["confidence"]}"
+        results.insert(:id_user => user_id, :date_task => date_daily, :tag => tag["name"], :confidence => tag["confidence"])
+      end
+#end
       bot.api.send_message(chat_id: message.chat.id, text: "Отримав фото, дякую !")
-#      puts "Received the photo from ID: #{your_id}, Username: #{your_uname}"
+      puts "Received the photo from ID: #{user_id}, Username: #{user_uname}"
     elsif !message.document.nil?
       bot.api.send_message(chat_id: message.chat.id, text: "Файл необхідно відправляти як фото !")
     else
