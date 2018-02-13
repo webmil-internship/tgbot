@@ -2,6 +2,9 @@ require 'sequel'
 
 DB = Sequel.connect('sqlite://tgb.db')
 
+#
+# Слова
+#
 if DB.table_exists?(:words)
   puts "Table words already exists !"
   words = DB[:words]
@@ -13,8 +16,8 @@ if DB.table_exists?(:words)
 else
   DB.create_table :words do
     primary_key :id
-    String :uk_word
-    String :en_word
+    String :uk_word   # Українською, для розсилки учасникам
+    String :en_word   # Англійською, для відсилки для розпізнавання
   end
   words = DB[:words]
   words.insert(:uk_word => 'автомобіль', :en_word => 'car')
@@ -24,21 +27,61 @@ else
   words.insert(:uk_word => 'стіл', :en_word => 'table')
 end
 
+#
+# Учасники
+#
 if DB.table_exists?(:users)
   puts "Table users already exists !"
   users = DB[:users]
   puts "Users count: #{users.count}"
   puts "Users found:"
   users.each do |u|
-    puts "ID = #{u[:id]}, Username = #{u[:user_name]}, Active = #{u[:is_active]}"
+    puts "ID = #{u[:id]}, Username = #{u[:user_name]}"
   end
 else
   DB.create_table :users do
     Integer :id
-    String :user_name
-    Boolean :is_active
+    String :user_name   # імя користувача
+#    Boolean :is_active  # ознака участі в грі
   end
   users = DB[:users]
-  users.insert(:id => 123, :user_name => 'RomanKS', :is_active => true)
-  users.insert(:id => 124, :user_name => 'RomanMTS', :is_active => false)
+end
+
+#
+# Щоденні завдання
+#
+if DB.table_exists?(:tasks)
+  puts "Table tasks already exists !"
+  tasks = DB[:tasks]
+  puts "Tasks count: #{tasks.count}"
+  puts "Tasks found:"
+  tasks.each do |t|
+    puts "ID = #{t[:date]}, ID word = #{u[:id_word]}"
+  end
+else
+  DB.create_table :tasks do
+    String :date      # Дата завдання
+    Integer :id_word  # ID слова
+  end
+  tasks = DB[:tasks]
+end
+
+#
+# Результати розпізнавання
+#
+if DB.table_exists?(:results)
+  puts "Table results already exists !"
+  results = DB[:results]
+  puts "Results count: #{results.count}"
+  puts "Results found:"
+  results.each do |r|
+    puts "ID = #{t[:date]}, ID word = #{u[:id_word]}"
+  end
+else
+  DB.create_table :results do
+    Integer :id_user
+    String  :date_task
+    String  :tag        # тег ідентифікації
+    Float   :confidence # точність тега
+  end
 end

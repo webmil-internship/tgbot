@@ -3,7 +3,8 @@ ENV['TZ'] = 'Europe/Kiev'
 require 'telegram/bot'
 require 'yaml'
 require 'rufus-scheduler'
-require 'Sequel'
+require 'sequel'
+require 'date'
 
 CONFIG = YAML.load_file('config.yaml')
 DB = Sequel.connect('sqlite://tgb.db')
@@ -20,7 +21,10 @@ scheduler.cron CONFIG['schedule'] do
   text_daily = "Доброго дня! Вишліть, будь-ласка, мені фото, на якому є #{uk_word_daily}."
   # Відправка повідомлення
   bot.api.send_message(chat_id: CONFIG['channel'], text: text_daily)
-  puts "Sent the task about #{en_word_daily} from bot to channel..."
+  puts "Sent the daily task about #{en_word_daily} from bot to channel..."
+  # Запис в БД інформації про денне завдання
+  tasks = DB[:tasks]
+  tasks.insert(:date => Date.today.to_s, :id_word => id_daily)
 end
 
 puts 'Starting scheduler...'
