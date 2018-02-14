@@ -24,7 +24,7 @@ scheduler.cron CONFIG['schedule'] do
   puts "Sent the daily task about #{en_word_daily} from bot to channel..."
   # Запис в БД інформації про денне завдання
   tasks = DB[:tasks]
-  tasks.insert(:date => Date.today.to_s, :id_word => id_daily)
+  tasks.insert(:date => Date.today.to_s, :en_word => en_word_daily)
 end
 
 puts 'Starting scheduler...'

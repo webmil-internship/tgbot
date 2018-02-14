@@ -1,4 +1,5 @@
 require 'sequel'
+require 'yaml'
 
 DB = Sequel.connect('sqlite://tgb.db')
 
@@ -56,12 +57,12 @@ if DB.table_exists?(:tasks)
   puts "Tasks count: #{tasks.count}"
   puts "Tasks found:"
   tasks.each do |t|
-    puts "ID = #{t[:date]}, ID word = #{t[:id_word]}"
+    puts "Date = #{t[:date]}, word = #{t[:en_word]}"
   end
 else
   DB.create_table :tasks do
     String :date      # Дата завдання
-    Integer :id_word  # ID слова
+    String :en_word  # ID слова
   end
   tasks = DB[:tasks]
 end
@@ -75,12 +76,13 @@ if DB.table_exists?(:results)
   puts "Results count: #{results.count}"
   puts "Results found:"
   results.each do |r|
-    puts "ID = #{r[:id_user]}, ID word = #{r[:date_task]}, tag = #{r[:tag]}, confidence = #{r[:confidence]}"
+    puts "ID user = #{r[:id_user]}, Task date = #{r[:date]}, Word = #{r[:en_word]}, tag = #{r[:tag]}, confidence = #{r[:confidence]}"
   end
 else
   DB.create_table :results do
     Integer :id_user
-    String  :date_task
+    String  :date
+    String  :en_word
     String  :tag        # тег ідентифікації
     Float   :confidence # точність тега
   end
