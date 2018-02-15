@@ -2,7 +2,7 @@ Sequel.migration do
   change do
     create_table(:tasks) do
       String :date
-      Integer :id_word
+      String :en_word
     end
   end
 end

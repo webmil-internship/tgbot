@@ -3,7 +3,7 @@
 /tmp/*
 
 # Ignore config file with bot token
-/config.yaml
+/config.yml
 
 # Ignore DB
 /*.db
