@@ -6,6 +6,6 @@
 /config.yml
 
 # Ignore DB
-/*.db
+/db/*.db
 
 /Gemfile.lock
