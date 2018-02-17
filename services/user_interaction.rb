@@ -1,12 +1,15 @@
 class UserInteraction
   attr_accessor :bot, :message
+  
+  PHOTO_RECEIVED = "Отримав Ваше фото, дякую !"
+  FILE_IS_NOT_PHOTO = "Файл необхідно відправляти як фото !"
 
-  def initialize(b, m)
-   @bot = b
-   @message = m
+  def initialize(b, m = nil)
+    @bot = b
+    @message = m
   end
 
-  def no_user?
+  def show_if_no_user?
     user = User.find(user_id: message.from.id)
     if user.nil?
       bot.api.sendMessage(chat_id: message.chat.id, text: "Ви не зареєстровані в грі, #{message.from.username} !")
@@ -21,7 +24,7 @@ class UserInteraction
     end
   end
   
-  def no_task?
+  def show_if_no_task?
     if Task.find(date: Date.today).nil?
       bot.api.send_message(chat_id: message.chat.id, text: "Сьогодні завдання ще не було !")
       true
@@ -30,9 +33,9 @@ class UserInteraction
     end
   end
 
-  def is_photo?
+  def show_if_is_photo?
     if Result.where(id_user: message.from.id, date: Date.today).any?
-      bot.api.send_message(chat_id: message.chat.id, text: "На сьогоднішнє завдання ви вже присилали фото !")
+      bot.api.send_message(chat_id: message.chat.id, text: "На сьогоднішнє завдання Ви вже присилали фото !")
       true
     else
       false
@@ -45,16 +48,24 @@ class UserInteraction
           - Для реєстрації або поновлення в грі - /start\n
           - Для зупинки участі в грі - /stop\n
           - Сьогоднішнє завдання - /task\n
-          - Статистика всіх учасників - /rate\n
+          - Статистика всіх учасників - /all\n
           - Ваша статистика - /my\n
           - Для перегляду цих правил - будь-який текст\n
           Успіхів !\n")
   end
   
+  def show_photo_received
+    bot.api.send_message(chat_id: message.chat.id, text: PHOTO_RECEIVED)
+  end
+  
+  def show_file_is_not_photo
+    bot.api.send_message(chat_id: message.chat.id, text: FILE_IS_NOT_PHOTO)
+  end
+  
   def show_task
     task = Task.find(date: Date.today)
     if task
-      bot.api.sendMessage(chat_id: message.chat.id, text: "Доброго дня! Вишліть, будь-ласка, мені фото, на якому є #{task.uk_word}.")
+      bot.api.sendMessage(chat_id: message.chat.id, text: "Вишліть, будь-ласка, мені фото, на якому є #{task.uk_word}.")
     else
       bot.api.sendMessage(chat_id: message.chat.id, text: "Сьогодні завдання ще не було !")
     end
@@ -71,7 +82,7 @@ class UserInteraction
     else
       bot.api.sendMessage(chat_id: message.chat.id, text: "Ви вже з нами, #{message.from.username} !")
     end
-    show_task unless is_photo?
+    show_task unless show_if_is_photo?
   end
 
   def remove_user
@@ -79,29 +90,52 @@ class UserInteraction
     if user.nil?
       bot.api.sendMessage(chat_id: message.chat.id, text: "Ви не зареєстровані в грі, #{message.from.username} !")
       show_rules
-    else
+    elsif user.is_active == true
       user.update(is_active: false)
       bot.api.sendMessage(chat_id: message.chat.id, text: "Шкода, що Ви покидаєте гру, #{message.from.username} !")
+    else
+      bot.api.sendMessage(chat_id: message.chat.id, text: "Ви вже покинули гру, #{message.from.username} !")
     end
   end
 
   def show_my_rate
+    text = ""
     resuts = Result.where(id_user: message.from.id, en_word: :tag).order(:date)
     resuts.each do |row|
-      bot.api.send_message(chat_id: message.chat.id, text: "#{row[:date]} #{row[:en_word]} == #{row[:tag]}:\n #{row[:confidence]}")
+      text += "#{row[:date]} #{row[:en_word].ljust(10)}: #{row[:confidence]}\n"
     end
+    bot.api.send_message(chat_id: message.chat.id, text: text)
   end
 
   def show_all_rate
     user = ""
+    text = ""
     resuts = Result.join(:users, user_id: :id_user).where(en_word: :tag).order(:user_name, :date)
     resuts.each do |row|
       if user != row[:user_name]
-        bot.api.send_message(chat_id: message.chat.id, text: "Учасник: #{row[:user_name]}")
+        bot.api.send_message(chat_id: message.chat.id, text: text) unless text.empty?
+        text = "Учасник: #{row[:user_name]}\n"
         user = row[:user_name]
       end
-      bot.api.send_message(chat_id: message.chat.id, text: "#{row[:date]} #{row[:en_word]} == #{row[:tag]}:\n #{row[:confidence]}")
+      text += "#{row[:date]} #{row[:en_word].ljust(10)}: #{row[:confidence]}\n"
     end
+    bot.api.send_message(chat_id: message.chat.id, text: text) unless text.empty?
+  end
+
+  def send_task
+    # Підключення до БД і формування щоденного завдання для учасників гри
+    id_daily = rand(1..Word.max(:id))
+    uk_word_daily = Word.find(id: id_daily)[:uk_word]
+    en_word_daily = Word.find(id: id_daily)[:en_word]
+    text_daily = "Доброго дня! Вишліть, будь-ласка, мені фото, на якому є #{uk_word_daily}."
+    # Відправка повідомлення
+    users = User.where(is_active: true)
+    users.each do |u|
+      bot.api.send_message(chat_id: u.user_id, text: text_daily)
+    end
+    # Запис в БД інформації про денне завдання
+    Task.create(:date => Date.today.to_s, :en_word => en_word_daily, :uk_word => uk_word_daily)
+    puts "Sent the daily task about #{en_word_daily} from bot to users..."
   end
 
 end
