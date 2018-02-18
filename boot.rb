@@ -1,3 +1,4 @@
+puts 'Loading services...'
 ENV['TZ'] = 'Europe/Kiev'
 
 require 'telegram/bot'
@@ -12,4 +13,5 @@ require 'rest-client'
 CONFIG = YAML.load_file('config.yml')
 DB = Sequel.connect('sqlite://./db/tgb.db')
 
+Dir[File.dirname(__FILE__) + '/services/*.rb'].each {|file| require file }
 Dir[File.dirname(__FILE__) + '/models/*.rb'].each {|file| require file }

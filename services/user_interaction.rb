@@ -1,7 +1,7 @@
 class UserInteraction
   attr_accessor :bot, :message
   
-  PHOTO_RECEIVED = "Отримав Ваше фото, дякую !"
+  PHOTO_RECEIVED = "Ваше фото отримав, дякую !"
   FILE_IS_NOT_PHOTO = "Файл необхідно відправляти як фото !"
 
   def initialize(b, m = nil)
@@ -49,6 +49,7 @@ class UserInteraction
           - Для зупинки участі в грі - /stop\n
           - Сьогоднішнє завдання - /task\n
           - Статистика всіх учасників - /all\n
+          - Статистика всіх учасників (коротка) - /all\n
           - Ваша статистика - /my\n
           - Для перегляду цих правил - будь-який текст\n
           Успіхів !\n")
@@ -98,17 +99,33 @@ class UserInteraction
     end
   end
 
-  def show_my_rate
+  def old_show_my_rate
     text = ""
-    resuts = Result.where(id_user: message.from.id, en_word: :tag).order(:date)
+    results = Result.where(id_user: message.from.id, en_word: :tag).order(:date)
     days_all = Result.where(id_user: message.from.id).group(:date).count
     days_right = Result.where(id_user: message.from.id, en_word: :tag).group(:date).count
     confidence_sum = Result.where(id_user: message.from.id, en_word: :tag).sum(:confidence)
     confidence_avr = confidence_sum / days_all
-    resuts.each do |row|
+    results.each do |row|
       text += "#{row[:date]} #{row[:en_word].ljust(10)}: #{row[:confidence]}\n"
     end
-    text += "Дні всі/співпадіння: #{days_all}/#{days_right}\n"
+    text += "Дні участі/співпадіння: #{days_all}/#{days_right}\n"
+    text += "Середня оцінка співпадіння: #{confidence_avr}"
+    bot.api.send_message(chat_id: message.chat.id, text: text)
+  end
+
+  def show_my_rate
+    text = ""
+    days_all = Result.where(id_user: message.from.id).group(:date).count
+    days_right = Result.where(id_user: message.from.id, en_word: :tag).group(:date).count
+    confidence_sum = Result.where(id_user: message.from.id, en_word: :tag).sum(:confidence)
+    confidence_avr = confidence_sum / days_all
+    Task.order(:date).each do |row|
+      attempt = Result.where(id_user: message.from.id, date: row[:date]).count
+      result = Result.where(id_user: message.from.id, date: row[:date], tag: row[:en_word])
+      text += "#{row[:date]} #{row[:en_word].ljust(10)}: #{result.first.nil? ? "0.00" : result.first[:confidence]}\n" if attempt > 0
+    end
+    text += "Дні участі/співпадіння: #{days_all}/#{days_right}\n"
     text += "Середня оцінка співпадіння: #{confidence_avr}"
     bot.api.send_message(chat_id: message.chat.id, text: text)
   end
@@ -126,10 +143,10 @@ class UserInteraction
         confidence_sum = Result.where(id_user: row[:id_user], en_word: :tag).sum(:confidence)
         confidence_avr = confidence_sum / days_all
         text = "Учасник: #{row[:user_name]}\n"
-        text += "Дні всі/співпадіння: #{days_all}/#{days_right}\n"
+        text += "Дні участі/співпадіння: #{days_all}/#{days_right}\n"
         text += "Середня оцінка співпадіння: #{confidence_avr}\n"
       end
-      text += "#{row[:date]} #{row[:en_word].ljust(10)}: #{row[:confidence]}\n" if how_to_show == 'all'
+      text += "#{row[:date]} #{row[:en_word].ljust(10)}: #{row[:confidence]}\n" if how_to_show == 'full'
     end
     bot.api.send_message(chat_id: message.chat.id, text: text) unless text.empty?
   end
@@ -146,7 +163,7 @@ class UserInteraction
       bot.api.send_message(chat_id: u.user_id, text: text_daily)
     end
     # Запис в БД інформації про денне завдання
-    Task.create(:date => Date.today.to_s, :en_word => en_word_daily, :uk_word => uk_word_daily)
+    Task.create(date: Date.today, en_word: en_word_daily, uk_word: uk_word_daily)
     puts "Sent the daily task about #{en_word_daily} from bot to users..."
   end
 

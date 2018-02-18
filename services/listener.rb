@@ -1,6 +1,3 @@
-require_relative 'services/user_interaction'
-require_relative 'services/received_photo'
-
 class Listener
   attr_accessor :bot_token
 
@@ -9,7 +6,7 @@ class Listener
   end
 
   def run
-    puts 'Starting bot...'
+    puts 'Starting listener...'
     Telegram::Bot::Client.run(bot_token) do |bot|
       bot.listen do |message|
         ui = UserInteraction.new(bot, message)
@@ -20,8 +17,8 @@ class Listener
           next if ui.show_if_no_task?
           # Перевіряємо, чи гравець вже присилав на сьогоднішню дату фото
           next if ui.show_if_is_photo?
-          received_photo = ReceivedPhoto.new(message)
-          received_photo.handling
+          # Обробляємо отримане фото
+          ReceivedPhoto.new(message).handling
           ui.show_photo_received
           puts "Received the photo from ID: #{message.chat.id}, Username: #{message.chat.username}"
          elsif message.document
@@ -41,7 +38,7 @@ class Listener
           when '/short'
             ui.show_all_rate('short')
           when '/all'
-            ui.show_all_rate('all')
+            ui.show_all_rate('full')
           else
             ui.show_rules
           end

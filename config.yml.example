@@ -1,4 +1,5 @@
 token: YOUR_BOT_TOKEN
+# Щохвилини для тестування
 schedule: '*/1 * * * *'
 mscv_subkey: YOUR_MS_COMPUTER_VISION_SUBKEY
 mscv_url: 'https://westcentralus.api.cognitive.microsoft.com/vision/v1.0/analyze'

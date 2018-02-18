@@ -1,5 +1,3 @@
-require_relative 'services/user_interaction'
-
 class Sender
   attr_accessor :bot_token, :schedule
 
@@ -9,6 +7,7 @@ class Sender
   end
 
   def run
+    puts 'Starting scheduler...'
     scheduler = Rufus::Scheduler.new
     ui = UserInteraction.new(Telegram::Bot::Client.new(bot_token))
 
@@ -20,8 +19,6 @@ class Sender
         puts "#{Date.today} - today task already exists"
       end
     end
-    puts 'Starting scheduler...'
-    scheduler.join
   end
 
 end
