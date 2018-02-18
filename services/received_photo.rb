@@ -1,11 +1,11 @@
 class ReceivedPhoto
-  attr_accessor :tg_api_url, :mscv_url, :mscv_subkey, :bot_token, :message
+  attr_accessor :message
+  TG_API_URL = CONFIG['tg_api_url']
+  MSCV_URL = CONFIG['mscv_url']
+  MSCV_SUBKEY = CONFIG['mscv_subkey']
+  BOT_TOKEN = CONFIG['token']
 
   def initialize(m)
-    @tg_api_url = CONFIG['tg_api_url']
-    @mscv_url = CONFIG['mscv_url']
-    @mscv_subkey = CONFIG['mscv_subkey']
-    @bot_token = CONFIG['token']
     @message = m
   end
 
@@ -21,22 +21,22 @@ class ReceivedPhoto
   private
 
   def get_photo_url(file_id)
-    get_file_url = "#{tg_api_url}/bot#{bot_token}/getFile?file_id=#{file_id}"
+    get_file_url = "#{TG_API_URL}/bot#{BOT_TOKEN}/getFile?file_id=#{file_id}"
     json_response = RestClient.get(get_file_url).body
     response = JSON.parse(json_response)
     file_path = response.dig("result", "file_path")
-    "#{tg_api_url}/file/bot#{bot_token}/#{file_path}"
+    "#{TG_API_URL}/file/bot#{BOT_TOKEN}/#{file_path}"
   end
 
   def send_to_computer_vision(file_url)
-    uri = URI(mscv_url)
+    uri = URI(MSCV_URL)
     uri.query = URI.encode_www_form({
       'visualFeatures' => 'Tags',
       'language' => 'en'
     })
     request = Net::HTTP::Post.new(uri.request_uri)
     request['Content-Type'] = 'application/json'
-    request['Ocp-Apim-Subscription-Key'] = mscv_subkey
+    request['Ocp-Apim-Subscription-Key'] = MSCV_SUBKEY
     request.body = "{\"url\": \"#{file_url}\"}"
     response = Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') do |http|
       http.request(request)

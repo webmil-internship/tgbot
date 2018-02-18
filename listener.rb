@@ -20,7 +20,7 @@ class Listener
           next if ui.show_if_no_task?
           # Перевіряємо, чи гравець вже присилав на сьогоднішню дату фото
           next if ui.show_if_is_photo?
-          received_photo = ReceivedPhoto.new(m)
+          received_photo = ReceivedPhoto.new(message)
           received_photo.handling
           ui.show_photo_received
           puts "Received the photo from ID: #{message.chat.id}, Username: #{message.chat.username}"
@@ -38,8 +38,10 @@ class Listener
             ui.show_task
           when '/my'
             ui.show_my_rate
+          when '/short'
+            ui.show_all_rate('short')
           when '/all'
-            ui.show_all_rate
+            ui.show_all_rate('all')
           else
             ui.show_rules
           end

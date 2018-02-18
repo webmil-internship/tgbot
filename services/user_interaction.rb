@@ -101,23 +101,35 @@ class UserInteraction
   def show_my_rate
     text = ""
     resuts = Result.where(id_user: message.from.id, en_word: :tag).order(:date)
+    days_all = Result.where(id_user: message.from.id).group(:date).count
+    days_right = Result.where(id_user: message.from.id, en_word: :tag).group(:date).count
+    confidence_sum = Result.where(id_user: message.from.id, en_word: :tag).sum(:confidence)
+    confidence_avr = confidence_sum / days_all
     resuts.each do |row|
       text += "#{row[:date]} #{row[:en_word].ljust(10)}: #{row[:confidence]}\n"
     end
+    text += "Дні всі/співпадіння: #{days_all}/#{days_right}\n"
+    text += "Середня оцінка співпадіння: #{confidence_avr}"
     bot.api.send_message(chat_id: message.chat.id, text: text)
   end
 
-  def show_all_rate
+  def show_all_rate(how_to_show)
     user = ""
     text = ""
     resuts = Result.join(:users, user_id: :id_user).where(en_word: :tag).order(:user_name, :date)
     resuts.each do |row|
       if user != row[:user_name]
-        bot.api.send_message(chat_id: message.chat.id, text: text) unless text.empty?
-        text = "Учасник: #{row[:user_name]}\n"
         user = row[:user_name]
+        bot.api.send_message(chat_id: message.chat.id, text: text) unless text.empty?
+        days_all = Result.where(id_user: row[:id_user]).group(:date).count
+        days_right = Result.where(id_user: row[:id_user], en_word: :tag).group(:date).count
+        confidence_sum = Result.where(id_user: row[:id_user], en_word: :tag).sum(:confidence)
+        confidence_avr = confidence_sum / days_all
+        text = "Учасник: #{row[:user_name]}\n"
+        text += "Дні всі/співпадіння: #{days_all}/#{days_right}\n"
+        text += "Середня оцінка співпадіння: #{confidence_avr}\n"
       end
-      text += "#{row[:date]} #{row[:en_word].ljust(10)}: #{row[:confidence]}\n"
+      text += "#{row[:date]} #{row[:en_word].ljust(10)}: #{row[:confidence]}\n" if how_to_show == 'all'
     end
     bot.api.send_message(chat_id: message.chat.id, text: text) unless text.empty?
   end
