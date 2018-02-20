@@ -35,6 +35,8 @@ class Listener
             ui.show_task
           when '/my'
             ui.show_my_rate
+          when '/my_tags'
+            ui.show_my_tags
           when '/short'
             ui.show_all_rate('short')
           when '/all'

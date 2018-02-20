@@ -12,11 +12,11 @@ class UserInteraction
   def show_if_no_user?
     user = User.find(user_id: message.from.id)
     if user.nil?
-      bot.api.sendMessage(chat_id: message.chat.id, text: "Ви не зареєстровані в грі, #{message.from.username} !")
+      bot.api.sendMessage(chat_id: message.chat.id, text: "Ви не зареєстровані в грі, #{message.from.first_name} !")
       show_rules
       true
     elsif user.is_active == false
-      bot.api.sendMessage(chat_id: message.chat.id, text: "Ви призупинили участь в грі, #{message.from.username} !")
+      bot.api.sendMessage(chat_id: message.chat.id, text: "Ви призупинили участь в грі, #{message.from.first_name} !")
       show_rules
       true
     else
@@ -50,7 +50,8 @@ class UserInteraction
           - Сьогоднішнє завдання - /task\n
           - Статистика всіх учасників - /all\n
           - Статистика всіх учасників (коротка) - /short\n
-          - Ваша статистика - /my\n
+          - Ваш рейтинг - /my\n
+          - Ваші теги за день - /my_tags\n
           - Для перегляду цих правил - будь-який текст\n
           Успіхів !\n")
   end
@@ -75,13 +76,13 @@ class UserInteraction
   def add_user
     user = User.find(user_id: message.from.id)
     if user.nil?
-      User.create(user_id: message.from.id, user_name: message.from.username, is_active: true)
-      bot.api.sendMessage(chat_id: message.chat.id, text: "Вітаю в грі, #{message.from.username} !")
+      User.create(user_id: message.from.id, user_name: message.from.first_name, is_active: true)
+      bot.api.sendMessage(chat_id: message.chat.id, text: "Вітаю в грі, #{message.from.first_name} !")
     elsif user.is_active == false
       user.update(is_active: true)
-      bot.api.sendMessage(chat_id: message.chat.id, text: "З поверненням в гру, #{message.from.username} !")
+      bot.api.sendMessage(chat_id: message.chat.id, text: "З поверненням в гру, #{message.from.first_name} !")
     else
-      bot.api.sendMessage(chat_id: message.chat.id, text: "Ви вже з нами, #{message.from.username} !")
+      bot.api.sendMessage(chat_id: message.chat.id, text: "Ви вже з нами, #{message.from.first_name} !")
     end
     show_task unless show_if_is_photo?
   end
@@ -89,13 +90,13 @@ class UserInteraction
   def remove_user
     user = User.find(user_id: message.from.id)
     if user.nil?
-      bot.api.sendMessage(chat_id: message.chat.id, text: "Ви не зареєстровані в грі, #{message.from.username} !")
+      bot.api.sendMessage(chat_id: message.chat.id, text: "Ви не зареєстровані в грі, #{message.from.first_name} !")
       show_rules
     elsif user.is_active == true
       user.update(is_active: false)
-      bot.api.sendMessage(chat_id: message.chat.id, text: "Шкода, що Ви покидаєте гру, #{message.from.username} !")
+      bot.api.sendMessage(chat_id: message.chat.id, text: "Шкода, що Ви покидаєте гру, #{message.from.first_name} !")
     else
-      bot.api.sendMessage(chat_id: message.chat.id, text: "Ви вже покинули гру, #{message.from.username} !")
+      bot.api.sendMessage(chat_id: message.chat.id, text: "Ви вже покинули гру, #{message.from.first_name} !")
     end
   end
 
@@ -119,6 +120,7 @@ class UserInteraction
     days_all = Result.where(id_user: message.from.id).group(:date).count
     days_right = Result.where(id_user: message.from.id, en_word: :tag).group(:date).count
     confidence_sum = Result.where(id_user: message.from.id, en_word: :tag).sum(:confidence)
+    confidence_sum = 0 if confidence_sum.nil?
     confidence_avr = confidence_sum / days_all
     Task.order(:date).each do |row|
       attempt = Result.where(id_user: message.from.id, date: row[:date]).count
@@ -127,6 +129,16 @@ class UserInteraction
     end
     text += "Дні участі/співпадіння: #{days_all}/#{days_right}\n"
     text += "Середня оцінка співпадіння: #{confidence_avr}"
+    bot.api.send_message(chat_id: message.chat.id, text: text)
+  end
+
+  def show_my_tags
+    return if show_if_no_task?
+    text = "Заавдання: #{Task.where(date: Date.today).first.en_word}\n"
+    today_result = Result.where(id_user: message.from.id, date: Date.today).all
+    today_result.each do |row|
+      text += "#{row[:tag].ljust(10)}: #{row[:confidence]}\n"
+    end
     bot.api.send_message(chat_id: message.chat.id, text: text)
   end
 
