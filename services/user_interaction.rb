@@ -116,8 +116,8 @@ class UserInteraction
   end
 
   def show_my_rate
+    return if show_if_no_user?
     text = ""
-
     days_all = Result.where(id_user: message.from.id).group(:date).count
     days_right = Result.where(id_user: message.from.id, en_word: :tag).group(:date).count
     confidence_sum = Result.where(id_user: message.from.id, en_word: :tag).sum(:confidence)
@@ -134,6 +134,7 @@ class UserInteraction
   end
 
   def show_my_tags
+    return if show_if_no_user?
     return if show_if_no_task?
     text = "Заавдання: #{Task.where(date: Date.today).first.en_word}\n"
     today_result = Result.where(id_user: message.from.id, date: Date.today).all
@@ -144,6 +145,7 @@ class UserInteraction
   end
 
   def show_all_rate(how_to_show)
+    return if show_if_no_user?
     user = ""
     text = ""
     resuts = Result.join(:users, user_id: :id_user).where(en_word: :tag).order(:user_name, :date)
