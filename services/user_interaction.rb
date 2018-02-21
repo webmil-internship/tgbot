@@ -100,21 +100,6 @@ class UserInteraction
     end
   end
 
-  def old_show_my_rate
-    text = ""
-    results = Result.where(id_user: message.from.id, en_word: :tag).order(:date)
-    days_all = Result.where(id_user: message.from.id).group(:date).count
-    days_right = Result.where(id_user: message.from.id, en_word: :tag).group(:date).count
-    confidence_sum = Result.where(id_user: message.from.id, en_word: :tag).sum(:confidence)
-    confidence_avr = confidence_sum / days_all
-    results.each do |row|
-      text += "#{row[:date]} #{row[:en_word].ljust(10)}: #{row[:confidence]}\n"
-    end
-    text += "Дні участі/співпадіння: #{days_all}/#{days_right}\n"
-    text += "Середня оцінка співпадіння: #{confidence_avr}"
-    bot.api.send_message(chat_id: message.chat.id, text: text)
-  end
-
   def show_my_rate
     return if show_if_no_user?
     text = ""

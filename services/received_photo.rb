@@ -31,14 +31,14 @@ class ReceivedPhoto
   def send_to_computer_vision(file_url)
     uri = URI(MSCV_URL)
     uri.query = URI.encode_www_form({
-      'visualFeatures' => 'Tags',
-      'language' => 'en'
+      visualFeatures: 'Tags',
+      language: 'en'
     })
     request = Net::HTTP::Post.new(uri.request_uri)
     request['Content-Type'] = 'application/json'
     request['Ocp-Apim-Subscription-Key'] = MSCV_SUBKEY
     request.body = "{\"url\": \"#{file_url}\"}"
-    response = Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') do |http|
+    response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http|
       http.request(request)
     end
     json = JSON.parse(response.body)

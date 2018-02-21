@@ -20,10 +20,10 @@ class Listener
           # Обробляємо отримане фото
           ReceivedPhoto.new(message).handling
           ui.show_photo_received
-          puts "Received the photo from ID: #{message.chat.id}, Username: #{message.chat.username}"
+          puts "Received the photo from ID: #{message.chat.id}, Username: #{message.chat.first_name}"
          elsif message.document
           ui.show_file_is_not_photo
-          puts "Received the non-photo file from ID: #{message.chat.id}, Username: #{message.chat.username}"
+          puts "Received the non-photo file from ID: #{message.chat.id}, Username: #{message.chat.first_name}"
         else
           case message.text
           when '/start'
