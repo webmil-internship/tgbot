@@ -117,11 +117,12 @@ class UserInteraction
 
   def show_my_rate
     text = ""
+
     days_all = Result.where(id_user: message.from.id).group(:date).count
     days_right = Result.where(id_user: message.from.id, en_word: :tag).group(:date).count
     confidence_sum = Result.where(id_user: message.from.id, en_word: :tag).sum(:confidence)
     confidence_sum = 0 if confidence_sum.nil?
-    confidence_avr = confidence_sum / days_all
+    confidence_avr = days_all == 0 ? 0 : confidence_sum / days_all
     Task.order(:date).each do |row|
       attempt = Result.where(id_user: message.from.id, date: row[:date]).count
       result = Result.where(id_user: message.from.id, date: row[:date], tag: row[:en_word])
